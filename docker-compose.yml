@@ -1,0 +1,12 @@
+services:
+    dockerlm:
+        image: dockerlm:test
+        container_name: dockerlm
+        network_mode: bridge
+        hostname: "gaia"
+        mac_address: "00:14:4F:8D:24:CC"
+        user: root
+        restart: unless-stopped
+        ports:
+            - "1700:1700" #LMGRD Port
+            - "1701:1701" #VENDOR Port
