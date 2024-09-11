@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+#	/etc/rc.d/init.d/dsls
+#
+# Starts the DSLicSrv daemon
+#
+# chkconfig: 35 98 02
+# description: DSLicSrv 
+# processname:  DSLicSrv
+
+### BEGIN INIT INFO
+# Provides:          DSLicSrv
+# Required-Start:    $local_fs $syslog $remote_fs $network
+# Should-Start: 
+# Required-Stop:     $local_fs $syslog $remote_fs $network
+# Should-Stop: 
+# Default-Start:     3 5
+# Default-Stop:      0 1 2 6
+# Short-Description: DSLicSrv
+# Description:       Start DSLicSrv
+### END INIT INFO
+DSLS_BIN=PATH_TO_CUSTOMIZE/code/bin/DSLicSrv
+
+check() {
+# Check for missing binaries (stale symlinks should not happen)
+# Note: Special treatment of stop for LSB conformance
+test -x $DSLS_BIN || { echo "$DSLS_BIN not installed"; 
+    if [ "$1" = "stop" ]; then exit 0;
+    else exit 5; fi; }
+}
+
+start() {
+
+    check
+    echo "Starting DSLicSrv..."
+    nohup $DSLS_BIN -startServer & 
+    sleep 2
+    grep STARTSERVER "$(ls -t /var/DassaultSystemes/LicenseServer/LogFiles/LicenseServer*.log | head -1)"
+    echo
+}
+
+stop() {
+
+    check
+    echo "Stopping DSLicSrv..."
+    $DSLS_BIN -stopServer 
+    sleep 2
+    echo Stopped
+}
+
+restart() {
+    stop
+    start
+}
+
+
+case "$1" in
+start)
+    start
+    ;;
+
+stop)
+    stop
+    ;;
+
+restart)
+    restart
+    ;;
+
+*)
+    echo $"Usage: $0 {start|stop|restart}"
+esac
+exit 0

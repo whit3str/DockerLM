@@ -2,16 +2,23 @@
 
 DockerLM is a containerized app of the FlexLM tool, allowing you to host a license server in a container.
 
+<!-- TOC -->
+* [DockerLM](#dockerlm)
+  * [Prerequisites](#prerequisites)
+  * [Deployment](#deployment)
+  * [Resources](#resources)
+<!-- TOC -->
 ## Prerequisites
 
-What things you need to install the software and how to install them.
+Needed stuff to get the image working :
+> Docker
 
-```
-Docker
-A license file FlexLM compatible
-The MAC Address relative to the hostname/license file.
+> A license file FlexLM compatible
+
+> The MAC Address relative to the hostname/license file.
+
 Docker Compose support implentation to be done.
-```
+
 
 ## Deployment
 
@@ -19,6 +26,8 @@ Clone the project and run the following command
 ```
 cd /DockerLM && docker run --hostname HOSTNAME --user root --mac-address="MAC@" --name dockerlm -it dockerlm:latest
 ```
+Fetch the HOSTNAME and the MAC@ from the license file.
+
 Inspect the container and ensure it's running normally :
 
 ` 9:32:04 (VENDOR) (@VENDOR-SLOG@) === Vendor Daemon ===`\
