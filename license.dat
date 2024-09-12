@@ -1,5 +1,5 @@
 SERVER gaia 00144f8d24cc 1700
-DAEMON msc port=1701
+DAEMON msc /opt/vendors/msc port=1701
 #
 # MSC License Reference ID: 8IKP
 #

@@ -13,9 +13,11 @@ DockerLM is a containerized app of the FlexLM tool, allowing you to host a licen
 Needed stuff to get the image working :
 > Docker
 
-> A license file FlexLM compatible
+> A license file FlexLM compatible : license.dat
 
 > The MAC Address relative to the hostname/license file.
+
+> The Port to expose.
 
 Docker Compose support implentation to be done.
 
@@ -24,9 +26,12 @@ Docker Compose support implentation to be done.
 
 Clone the project and run the following command
 ```
-cd /DockerLM && docker run --hostname HOSTNAME --user root --mac-address="MAC@" --name dockerlm -it dockerlm:latest
+cd /DockerLM && docker run -v .\license.dat:/opt/license.dat --hostname HOSTNAME --mac-address="MAC@" -p PORT:PORT --name dockerlm -it dockerlm:latest
+
+docker run -v .\license.dat:/opt/license.dat --hostname gaia --mac-address="00:14:4f:8d:24:cc" -p 1700:1700 -p 1701:1701 --name msc -it dockerlm:latest 
 ```
-Fetch the HOSTNAME and the MAC@ from the license file.
+
+Fetch the HOSTNAME, the MAC@ and the PORT from the license file.
 
 Inspect the container and ensure it's running normally :
 

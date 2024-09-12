@@ -1,8 +1,8 @@
 FROM ubuntu:24.04
 ADD . /opt/
 WORKDIR /opt
-EXPOSE 1700 1701
 RUN apt-get update \
-&& apt-get install -y nano sudo net-tools macchanger \
+&& apt-get install -y nano sudo net-tools \
 && mkdir /usr/tmp
+EXPOSE 1700 1701
 CMD ["./start-flexlm.sh"]

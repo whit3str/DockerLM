@@ -2,7 +2,7 @@
 
 # Démarrer le serveur FlexLM
 echo "Starting FlexLM server..."
-./lmgrd -c msc.lic -l msc.log
+./lmgrd -c license.dat -l license.log
 
 # Vérifier si le serveur a démarré correctement
 if [ $? -eq 0 ]; then
@@ -13,4 +13,4 @@ else
 fi
 
 # Garder le conteneur en cours d'exécution
-tail -f msc.log
+tail -f license.log
