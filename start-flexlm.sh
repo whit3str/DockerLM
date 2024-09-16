@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Démarrer le serveur FlexLM
 echo "Starting FlexLM server..."
 ./lmgrd -c license.dat -l license.log
