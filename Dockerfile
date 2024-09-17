@@ -4,4 +4,4 @@ WORKDIR /opt
 RUN apt-get update \
 && apt-get install -y nano sudo net-tools \
 && mkdir /usr/tmp
-CMD ["/opt/start-flexlm.sh"]
+CMD ["./start-flexlm.sh"]
