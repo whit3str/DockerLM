@@ -1,16 +1,15 @@
 version: '3.9'
 services:
     dockerlm:
-        image: 'ghcr.io/whit3str/dockerlm:latest'
+        image: 'dockerlm:latest'
         tty: true
         stdin_open: true
-        container_name: dockerlm_VENDOR #Optional, specify if you aim to run several containers
+        container_name: dockerlm
         ports:
-            - 'LMGRDPORT:LMGRDPORT'
-            - 'VENDORPORT:VENDORPORT'
-        networks:
-            default:
-                mac_address: MAC@ #Fill correct value
-        hostname: HOSTNAME #Fill correct value
+            - '1700:1700'
+        mac_address: '00:14:4f:8d:24:cc'
+        hostname: gaia
         volumes:
-            - '/path/to/license.dat:/opt/license.dat' #UNIX PATH
+            - '.\license.dat:/opt/license.dat' #WIN PATH
+#            - './license.dat:/opt/license.dat' #UNIX PATH
+        user: root
