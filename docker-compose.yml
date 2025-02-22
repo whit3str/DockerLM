@@ -1,15 +1,17 @@
-version: '3.9'
 services:
     dockerlm:
-        image: 'dockerlm:latest'
-        tty: true
-        stdin_open: true
-        container_name: dockerlm
+        image: dockerlm:env
+        container_name: ${FLEXLM_HOSTNAME:-flexlm-server}
         ports:
-            - '1700:1700'
-        mac_address: '00:14:4f:8d:24:cc'
-        hostname: gaia
+            - "${FLEXLM_PORT:-27000}:27000"
+        environment:
+            - VENDOR_NAME=${VENDOR_NAME:-default_vendor}
+        mac_address: ${FLEXLM_MAC:-00:14:4f:8d:24:cc}
+        hostname: ${FLEXLM_HOSTNAME:-flexlm-server}
         volumes:
-            - '.\license.dat:/opt/license.dat' #WIN PATH
-#            - './license.dat:/opt/license.dat' #UNIX PATH
-        user: root
+            - ./licenses:/opt/flexlm/licenses
+            - ./vendors:/opt/flexlm/vendors:ro
+            - ./logs:/opt/flexlm/logs
+        restart: unless-stopped
+        cap_add:
+        - NET_ADMIN
