@@ -39,5 +39,5 @@ WORKDIR /opt/flexlm
 # Passer à l'utilisateur non-root
 USER flexlm
 
-# Point d'entrée du conteneur
+# Point d'entrée du conteneur - Utiliser le chemin absolu vers le script
 CMD ["/bin/bash", "/opt/flexlm/bin/start-flexlm.sh"]

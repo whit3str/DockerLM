@@ -12,6 +12,7 @@ services:
             - ./licenses:/opt/flexlm/licenses
             - ./vendors:/opt/flexlm/vendors:ro
             - ./logs:/opt/flexlm/logs
+            - ./start-flexlm.sh:/opt/flexlm/bin/start-flexlm.sh:ro
         restart: unless-stopped
         cap_add:
         - NET_ADMIN
