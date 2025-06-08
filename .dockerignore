@@ -1,3 +1,4 @@
 license.*
 docker-compose.yml
 .env
+.idea
