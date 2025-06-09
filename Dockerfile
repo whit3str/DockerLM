@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
-# Création d'un utilisateur non-root avec UID/GID spécifiques
+# Création d'un utilisateur non-root
 RUN groupadd -r -g 1000 flexlm && useradd -r -g flexlm -u 1000 -d /opt/flexlm -s /bin/bash flexlm
 
 # Installation des dépendances
@@ -23,21 +23,20 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /usr/tmp
 
-# Création des répertoires avec permissions appropriées
+# Création des répertoires
 RUN mkdir -p /opt/flexlm/{logs,bin,licenses,vendors,archive,tmp} && \
     chown -R flexlm:flexlm /opt/flexlm && \
     chmod -R 755 /opt/flexlm
 
-# Copie du script de démarrage et des binaires depuis le nouveau répertoire
+# Copie uniquement du script de démarrage
 COPY --chown=flexlm:flexlm start-flexlm.sh /opt/flexlm/bin/
-COPY --chown=flexlm:flexlm binaries/lmgrd /opt/flexlm/bin/
-COPY --chown=flexlm:flexlm binaries/lmutil /opt/flexlm/bin/
 
-# Correction des permissions
+# Correction des permissions du script
 RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/lmgrd && \
-    chmod +x /opt/flexlm/bin/lmutil
+    chmod +x /opt/flexlm/bin/start-flexlm.sh
+
+# Note pour les binaires
+RUN echo "FlexLM binaries will be mounted at runtime" > /opt/flexlm/bin/README_BINARIES.txt
 
 # Variables d'environnement
 ENV VENDOR_NAME="" \
