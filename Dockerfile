@@ -28,10 +28,10 @@ RUN mkdir -p /opt/flexlm/{logs,bin,licenses,vendors,archive,tmp} && \
     chown -R flexlm:flexlm /opt/flexlm && \
     chmod -R 755 /opt/flexlm
 
-# Copie du script de démarrage
+# Copie du script de démarrage et des binaires depuis le nouveau répertoire
 COPY --chown=flexlm:flexlm start-flexlm.sh /opt/flexlm/bin/
-COPY --chown=flexlm:flexlm lmgrd /opt/flexlm/bin/
-COPY --chown=flexlm:flexlm lmutil /opt/flexlm/bin/
+COPY --chown=flexlm:flexlm binaries/lmgrd /opt/flexlm/bin/
+COPY --chown=flexlm:flexlm binaries/lmutil /opt/flexlm/bin/
 
 # Correction des permissions
 RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
