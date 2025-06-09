@@ -1,47 +1,33 @@
 FROM ubuntu:22.04
 
+# Variables d'environnement
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
-# Création d'un utilisateur non-root
-RUN groupadd -r -g 1000 flexlm && useradd -r -g flexlm -u 1000 -d /opt/flexlm -s /bin/bash flexlm
-
-# Installation des dépendances
+# Installation des dépendances essentielles en une seule couche
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    nano \
-    sudo \
-    net-tools \
     dos2unix \
-    lsb-core \
-    build-essential \
-    wget \
-    gnupg2 \
     procps \
+    net-tools \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /usr/tmp
+    && rm -rf /var/lib/apt/lists/*
 
-# Création des répertoires
-RUN mkdir -p /opt/flexlm/{logs,bin,licenses,vendors,archive,tmp} && \
-    chown -R flexlm:flexlm /opt/flexlm && \
-    chmod -R 755 /opt/flexlm
+# Création de l'utilisateur et des répertoires
+RUN groupadd -r flexlm && \
+    useradd -r -g flexlm -d /opt/flexlm flexlm && \
+    mkdir -p /opt/flexlm/{bin,logs,tmp} && \
+    chown -R flexlm:flexlm /opt/flexlm
 
-# Copie uniquement du script de démarrage
-COPY --chown=flexlm:flexlm start-flexlm.sh /opt/flexlm/bin/
-
-# Correction des permissions du script
+# Copie et configuration du script
+COPY start-flexlm.sh /opt/flexlm/bin/
 RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/start-flexlm.sh
+    chmod +x /opt/flexlm/bin/start-flexlm.sh && \
+    chown flexlm:flexlm /opt/flexlm/bin/start-flexlm.sh
 
-# Note pour les binaires
-RUN echo "FlexLM binaries will be mounted at runtime" > /opt/flexlm/bin/README_BINARIES.txt
-
-# Variables d'environnement
+# Configuration par défaut
 ENV VENDOR_NAME="" \
-    MAX_LOG_SIZE_MB=10 \
-    LOG_ROTATION_HOURS=1 \
     TMPDIR=/opt/flexlm/tmp
 
 WORKDIR /opt/flexlm
