@@ -1,0 +1,24 @@
+# License files (potentially contain sensitive information)
+license.dat
+*.lic
+
+# Local environment variables
+.env
+
+# Vendor binaries
+vendors/*
+!vendors/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# Build artifacts
+*.o
+*.so
+*.dll
+
+# Temporary files
+.DS_Store
+*.swp
+*~

@@ -11,14 +11,21 @@ RUN apt-get update && \
     dos2unix \
     procps \
     net-tools \
+    iproute2 \
+    iputils-ping \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Création de l'utilisateur et des répertoires
 RUN groupadd -r flexlm && \
     useradd -r -g flexlm -d /opt/flexlm flexlm && \
-    mkdir -p /opt/flexlm/{bin,logs,tmp} && \
+    mkdir -p /opt/flexlm/{bin,logs,licenses,vendors,tmp,config} && \
     chown -R flexlm:flexlm /opt/flexlm
+
+# Copie des binaires FlexLM
+COPY binaries/lmgrd binaries/lmutil /opt/flexlm/bin/
+RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil && \
+    chown flexlm:flexlm /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
 
 # Copie et configuration du script
 COPY start-flexlm.sh /opt/flexlm/bin/
@@ -32,6 +39,6 @@ ENV VENDOR_NAME="" \
 
 WORKDIR /opt/flexlm
 USER flexlm
-EXPOSE 27000
+EXPOSE 27000-27001
 
 CMD ["/bin/bash", "/opt/flexlm/bin/start-flexlm.sh"]
