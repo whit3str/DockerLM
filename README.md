@@ -29,9 +29,9 @@ DockerLM is a containerized application of the FlexLM (FlexNet Publisher) licens
 
 *   **Docker and Docker Compose**: Ensure Docker and Docker Compose are installed on your system.
 *   **Vendor Files**: You will need:
-    1.  A FlexLM compatible license file (e.g., `myvendor.lic`) for your software.
+    1.  Your FlexLM compatible license file, **which must be named `license.dat`**.
     2.  The corresponding vendor daemon executable (e.g., `myvendor`).
-    *   These files should be placed in a local directory structure as described in the [Vendor Specific Files](#vendor-specific-files) section.
+    *   These files should be placed in local directories as described in the [Vendor Specific Files](#vendor-specific-files) section.
 
 ## Configuration via Environment Variables
 
@@ -48,24 +48,37 @@ The following environment variables are used to configure the DockerLM V2 contai
 
 ## Vendor Specific Files
 
-To use DockerLM, you need to provide the license file and the vendor daemon executable. These files must be organized in a local directory (e.g., `./flexlm_data/vendors`) that you will mount into the container.
+To use DockerLM, you need to provide your specific `license.dat` file and the vendor daemon executable.
 
-The expected structure within your local `./flexlm_data/vendors` directory is:
+**1. License File:**
+*   Your license file **must be named `license.dat`**.
+*   Place it in a local directory (e.g., `./my_flexlm_data/license_files/`).
+*   This directory (or the file itself) will be mounted to make the license available at `/opt/flexlm/licenses/license.dat` inside the container.
+
+**2. Vendor Daemon Executable:**
+*   Place your vendor daemon executable in a local directory structure like: `./my_flexlm_data/vendor_daemons/<VENDOR_NAME>/<VENDOR_NAME_executable>`
+    *   `<VENDOR_NAME>`: The value you set for the `VENDOR_NAME` environment variable (e.g., `ansys`, `adskflex`).
+    *   `<VENDOR_NAME_executable>`: The actual vendor daemon binary (e.g., `ansys`, `adskflex`). The script assumes this executable is named the same as your `VENDOR_NAME`.
+*   The parent directory (e.g., `./my_flexlm_data/vendor_daemons/`) will be mounted to `/opt/flexlm/vendors/` inside the container.
+*   The script will look for the daemon at `/opt/flexlm/vendors/<VENDOR_NAME>/<VENDOR_NAME>`.
+
+**Example Local Directory Structure (`./my_flexlm_data/`):**
 ```
-./flexlm_data/
-├── vendors/
-│   └── <VENDOR_NAME>/                 # A directory named after your vendor (e.g., ansys)
-│       ├── <VENDOR_NAME>.lic          # The license file (e.g., ansys.lic)
-│       └── <VENDOR_NAME>              # The vendor daemon executable (e.g., ansys)
-└── logs/                              # This directory will be created/used for logs
-    └── archive/                       # For archived logs
+./my_flexlm_data/
+├── license_files/
+│   └── license.dat              # Your license file for the current vendor
+├── vendor_daemons/
+│   └── <VENDOR_NAME>/           # e.g., ansys
+│       └── <VENDOR_NAME>        # The vendor daemon executable, e.g., ansys
+└── logs/                        # For logs (created/used by container)
+    └── archive/                 # For archived logs
 ```
-**Example:** If `VENDOR_NAME=ansys`, the container expects:
-*   License file: `/opt/flexlm/vendors/ansys/ansys.lic` (mounted from `./flexlm_data/vendors/ansys/ansys.lic`)
-*   Vendor daemon: `/opt/flexlm/vendors/ansys/ansys` (mounted from `./flexlm_data/vendors/ansys/ansys`)
+If `VENDOR_NAME=ansys`, the container expects:
+*   License file: `/opt/flexlm/licenses/license.dat` (mounted from `./my_flexlm_data/license_files/license.dat`)
+*   Vendor daemon: `/opt/flexlm/vendors/ansys/ansys` (mounted from `./my_flexlm_data/vendor_daemons/ansys/ansys`)
 
 The entrypoint script will automatically make the vendor daemon executable.
-[See existing vendor examples here](https://github.com/whit3str/DockerLM/tree/main/vendors) (Note: for V2, you only need the `.lic` and daemon file from these examples, placed in your local directory as per the structure above).
+[See existing vendor examples here](https://github.com/whit3str/DockerLM/tree/main/vendors) (Note: for V2, extract the daemon and license (renaming it to `license.dat`) and place them into the new structure described above).
 
 ## Deployment
 
@@ -82,7 +95,7 @@ The entrypoint script will automatically make the vendor daemon executable.
     HOSTNAME=my-license-server   # Choose a hostname
     MAX_LOG_SIZE_MB=50
     ```
-3.  Create a `docker-compose.yml` file (you can copy the one from this repository). Ensure the `volumes` section correctly maps your local data directories:
+3.  Create a `docker-compose.yml` file (you can copy the one from this repository). Ensure the `volumes` section correctly maps your local data directories, for example, using a base directory like `./my_flexlm_data`:
     ```yaml
     # my-flexlm-server/docker-compose.yml
     version: '3.8' # Or newer
@@ -103,27 +116,35 @@ The entrypoint script will automatically make the vendor daemon executable.
         mac_address: ${MAC_ADDRESS:-00:11:22:33:44:55} # Docker setting for container MAC
         hostname: ${HOSTNAME:-flexlm-server}          # Docker setting for container hostname
         volumes:
-          # Mount your local vendors directory to /opt/flexlm/vendors in the container
-          # The entrypoint script expects license and daemon here, under a $VENDOR_NAME subfolder
-          - ./flexlm_data/vendors:/opt/flexlm/vendors:ro
+          # Mount your license.dat file (must be named license.dat)
+          - ./my_flexlm_data/license_files/license.dat:/opt/flexlm/licenses/license.dat:ro
+          # Alternatively, mount the directory containing license.dat:
+          # - ./my_flexlm_data/license_files:/opt/flexlm/licenses:ro
+
+          # Mount your local directory containing vendor-specific subdirectories for DAEMONS
+          - ./my_flexlm_data/vendor_daemons:/opt/flexlm/vendors:ro
+
           # Mount a local directory for persistent logs
-          - ./flexlm_data/logs:/opt/flexlm/logs
-          # Note: The original license file in /opt/flexlm/vendors is read-only.
-          # A processed copy is created in /opt/flexlm/licenses (inside the container) for lmgrd to use.
+          - ./my_flexlm_data/logs:/opt/flexlm/logs
+
+          # Note: The original license.dat is read-only.
+          # A processed, vendor-specific copy (e.g., processed_myvendor.lic)
+          # is created in /opt/flexlm/licenses (inside the container) for lmgrd to use.
         restart: unless-stopped
         cap_add:
           - NET_ADMIN # Required for some FlexLM functionalities
     ```
-4.  Prepare your vendor files in `./my-flexlm-server/flexlm_data/vendors/<VENDOR_NAME>/` as described above.
+4.  Prepare your `license.dat` and vendor daemon executable in your local directories (e.g., `./my-flexlm-server/my_flexlm_data/license_files/license.dat` and `./my-flexlm-server/my_flexlm_data/vendor_daemons/<VENDOR_NAME>/<VENDOR_NAME_executable>`) as described under "Vendor Specific Files".
 5.  Run `docker-compose up -d`.
 
 ### Using Docker Run
 
 ```bash
 # Create local directories first
-mkdir -p ./my_flexlm_data/vendors ./my_flexlm_data/logs
+mkdir -p ./my_flexlm_data/license_files ./my_flexlm_data/vendor_daemons/myvendor ./my_flexlm_data/logs
 
-# Place your vendor files in ./my_flexlm_data/vendors/myvendor/myvendor.lic and ./my_flexlm_data/vendors/myvendor/myvendor
+# Place your license.dat in ./my_flexlm_data/license_files/license.dat
+# Place your vendor daemon in ./my_flexlm_data/vendor_daemons/myvendor/myvendor (assuming VENDOR_NAME=myvendor and daemon is named myvendor)
 
 docker run -d \
   --name myvendor-flexlm \
@@ -137,7 +158,8 @@ docker run -d \
   -e MAX_LOG_SIZE_MB="50" \
   --mac-address="00:1A:2B:3C:4D:5E" \
   --hostname="my-license-server" \
-  -v ./my_flexlm_data/vendors:/opt/flexlm/vendors:ro \
+  -v ./my_flexlm_data/license_files/license.dat:/opt/flexlm/licenses/license.dat:ro \
+  -v ./my_flexlm_data/vendor_daemons:/opt/flexlm/vendors:ro \
   -v ./my_flexlm_data/logs:/opt/flexlm/logs \
   --cap-add=NET_ADMIN \
   ghcr.io/whit3str/dockerlm:latest # Or your locally built image

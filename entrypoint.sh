@@ -16,10 +16,10 @@ CLEAN_MAC_ADDRESS=$(echo "${MAC_ADDRESS}" | sed 's/://g')
 LOG_FILE="/opt/flexlm/logs/${VENDOR_NAME}.log"
 ARCHIVE_DIR="/opt/flexlm/logs/archive"
 
-ORIGINAL_LICENSE_DIR="/opt/flexlm/vendors/${VENDOR_NAME}"
-ORIGINAL_LICENSE_FILE="${ORIGINAL_LICENSE_DIR}/${VENDOR_NAME}.lic" # Assuming .lic extension
+# ORIGINAL_LICENSE_DIR is no longer needed for ORIGINAL_LICENSE_FILE path definition
+ORIGINAL_LICENSE_FILE="/opt/flexlm/licenses/license.dat" # Static path for input license
 PROCESSED_LICENSE_DIR="/opt/flexlm/licenses" # Processed licenses go here
-PROCESSED_LICENSE_FILE="${PROCESSED_LICENSE_DIR}/processed_${VENDOR_NAME}.lic"
+PROCESSED_LICENSE_FILE="${PROCESSED_LICENSE_DIR}/processed_${VENDOR_NAME}.lic" # Processed license is still vendor specific
 
 LMGRD_BIN="/opt/flexlm/bin/lmgrd"
 
@@ -31,7 +31,7 @@ echo "Processing license for VENDOR: ${VENDOR_NAME}"
 
 if [ ! -f "$ORIGINAL_LICENSE_FILE" ]; then
     echo "ERROR: Original license file not found at $ORIGINAL_LICENSE_FILE"
-    echo "Please ensure it is mounted correctly at /opt/flexlm/vendors/${VENDOR_NAME}/${VENDOR_NAME}.lic"
+    echo "Please ensure your license.dat is mounted correctly to $ORIGINAL_LICENSE_FILE"
     exit 1
 fi
 
