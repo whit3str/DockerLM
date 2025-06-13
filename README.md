@@ -21,7 +21,7 @@ DockerLM is a containerized application of the FlexLM (FlexNet Publisher) licens
 
 *   **Dynamic Configuration**: Most settings are controlled via environment variables.
 *   **Vendor Agnostic**: Easily switch between different FlexLM vendors.
-*   **Automated License Modification**: Hostname, MAC address, and ports in the license file are updated automatically based on environment variables.
+*   **Direct License Usage**: Uses the provided `license.dat` directly, requiring manual pre-configuration by the user for the specific container environment (hostname, MAC, ports, daemon path).
 *   **Log Rotation**: Automatic rotation and archiving of vendor-specific log files.
 *   **Simplified Deployment**: Easier setup using Docker Compose with an `.env` file.
 
@@ -39,11 +39,11 @@ The following environment variables are used to configure the DockerLM V2 contai
 
 | Variable          | Default Value        | Description                                                                                                                               |
 |-------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| `VENDOR_NAME`     | `default_vendor`     | The name of your FlexLM vendor (e.g., `ansys`, `adskflex`, `xilinxd`). This determines log file names and subdirectories for vendor files. |
-| `LMGRD_PORT`      | `27000`              | The port number for the main `lmgrd` (FlexLM) daemon. This port will be exposed on the host.                                              |
-| `VENDOR_PORT`     | `27001`              | The port number for your specific vendor daemon. This port will be exposed on the host.                                                   |
-| `MAC_ADDRESS`     | `00:11:22:33:44:55`  | The MAC address (Host ID) to be written into the license file. Use the format `XX:XX:XX:XX:XX:XX`.                                       |
-| `HOSTNAME`        | `flexlm-server`      | The hostname to be written into the license file and set for the container.                                                               |
+| `VENDOR_NAME`     | `default_vendor`     | The name of your FlexLM vendor (e.g., `ansys`, `adskflex`, `xilinxd`). This determines log file names and the vendor daemon executable name. |
+| `LMGRD_PORT`      | `27000`              | The port number for the main `lmgrd` (FlexLM) daemon. This port will be exposed on the host by Docker. **You must ensure the `SERVER` line in your `license.dat` correctly specifies this port.** |
+| `VENDOR_PORT`     | `27001`              | The port number for your specific vendor daemon. This port will be exposed on the host by Docker. **You must ensure the `VENDOR` line for your daemon in `license.dat` correctly specifies this port.** |
+| `MAC_ADDRESS`     | `00:11:22:33:44:55`  | The MAC address to be set for the container by Docker (used as HOSTID). Use the format `XX:XX:XX:XX:XX:XX`. **You must ensure the `SERVER` line in your `license.dat` uses this MAC address as the HOSTID, or a compatible HOSTID like `ANY` if your license supports it.** |
+| `HOSTNAME`        | `flexlm-server`      | The hostname to be set for the container by Docker. **You must ensure the `SERVER` line in your `license.dat` correctly references this hostname.** |
 | `MAX_LOG_SIZE_MB` | `100`                | The maximum size (in MB) for the vendor-specific log file before it is rotated and archived.                                              |
 
 ## Vendor Specific Files
@@ -60,6 +60,9 @@ To use DockerLM, you need to provide your specific `license.dat` file and the ve
     *   `<VENDOR_NAME>`: The value you set for the `VENDOR_NAME` environment variable (e.g., `ansys`, `adskflex`). This will be the name of your executable file.
 *   This local directory (e.g., `./my_flexlm_data/vendor_daemons/`) will be mounted to `/opt/flexlm/vendors/` inside the container.
 *   The script will look for the daemon at `/opt/flexlm/vendors/<VENDOR_NAME>`.
+*   **Important: You are responsible for ensuring all details within your `license.dat` file are correct for the container environment before starting the service. The script no longer modifies this file.** This includes:
+    *   The `SERVER` line: Must correctly specify the hostname (matching the container's `HOSTNAME`), the MAC address/HostID (matching the container's `MAC_ADDRESS` or using a compatible ID like `ANY`), and the lmgrd port (matching `LMGRD_PORT`).
+    *   The `VENDOR` line: Must correctly specify the path to the vendor daemon as `/opt/flexlm/vendors/<VENDOR_NAME>` (where `<VENDOR_NAME>` is your actual vendor name) and the vendor port (matching `VENDOR_PORT`).
 
 **Example Local Directory Structure (`./my_flexlm_data/`):**
 ```
@@ -127,9 +130,9 @@ The entrypoint script will automatically make the vendor daemon executable.
           # Mount a local directory for persistent logs
           - ./my_flexlm_data/logs:/opt/flexlm/logs
 
-          # Note: The original license.dat is read-only.
-          # A processed, vendor-specific copy (e.g., processed_myvendor.lic)
-          # is created in /opt/flexlm/licenses (inside the container) for lmgrd to use.
+          # Note: The license.dat file is used directly by FlexLM.
+          # Ensure it is correctly pre-configured for the container's
+          # environment (hostname, MAC address/HOSTID, ports, and vendor daemon path).
         restart: unless-stopped
         cap_add:
           - NET_ADMIN # Required for some FlexLM functionalities
@@ -184,7 +187,7 @@ Look for messages indicating that `lmgrd` and the vendor daemon have started suc
 
 *   **Permissions**: Ensure the vendor daemon file you provide has execute permissions. The entrypoint script attempts to `chmod +x` it, but initial permissions can matter.
 *   **Firewall**: Ensure your host firewall allows traffic on `LMGRD_PORT` and `VENDOR_PORT`.
-*   **License File Content**: While the script updates key fields, ensure your base license file is valid for the vendor daemon version.
+*   **License File Content**: Ensure your `license.dat` file is fully and correctly pre-configured for the vendor daemon version and the intended container environment (hostname, MAC/HostID, ports, daemon path). The script does not modify this file.
 *   **Client Side**: Client machines need to be able to resolve the `HOSTNAME` of the license server to its IP address and reach the specified ports. You might need to update client license files or environment variables (e.g., `LM_LICENSE_FILE=@my-license-server`) and ensure network connectivity. For testing, you can add an entry to the client's hosts file:
     UNIX : `sudo nano /etc/hosts` (add `<server_ip> my-license-server`)
     WIN : Edit `C:\Windows\System32\drivers\etc\hosts` (add `<server_ip> my-license-server`)
