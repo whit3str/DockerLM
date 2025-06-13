@@ -59,7 +59,7 @@ echo "  Updated SERVER line with HOSTNAME=${HOSTNAME}, MAC_ADDRESS=${CLEAN_MAC_A
 # Becomes: VENDOR vendorname /opt/flexlm/vendors/VENDOR_NAME/vendordaemon PORT=newport
 # This assumes the vendor daemon is named $VENDOR_NAME (e.g., "ansyslmd") and is located in its vendor directory.
 # This also assumes the VENDOR line might or might not have options or a PORT= part.
-VENDOR_DAEMON_PATH="/opt/flexlm/vendors/${VENDOR_NAME}/${VENDOR_NAME}" # Assuming daemon name matches VENDOR_NAME
+VENDOR_DAEMON_PATH="/opt/flexlm/vendors/${VENDOR_NAME}/" # Assuming daemon name matches VENDOR_NAME
 
 # First, ensure the VENDOR line has the correct daemon name and path
 sed -i -E "s|^(VENDOR\s+${VENDOR_NAME}\s+)\S+|\1${VENDOR_DAEMON_PATH}|" "$PROCESSED_LICENSE_FILE"
@@ -124,7 +124,7 @@ manage_log_rotation &
 echo "Log rotation process started in background."
 
 # VENDOR_DAEMON_PATH was already defined and used during license processing.
-# For clarity, its value is /opt/flexlm/vendors/${VENDOR_NAME}/${VENDOR_NAME}
+# For clarity, its value is /opt/flexlm/vendors/${VENDOR_NAME}/
 echo "Ensuring vendor daemon is executable..."
 if [ -f "$VENDOR_DAEMON_PATH" ]; then
     chmod +x "$VENDOR_DAEMON_PATH"
