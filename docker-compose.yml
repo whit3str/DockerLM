@@ -1,18 +1,23 @@
 services:
     dockerlm:
         image: dockerlm:env
-        container_name: ${FLEXLM_HOSTNAME:-flexlm-server}
+        container_name: ${VENDOR_NAME:-vendor}-flexlm
         ports:
-            - "${FLEXLM_PORT:-27000}:27000"
+            - "${LMGRD_PORT:-27000}:${LMGRD_PORT:-27000}"
+            - "${VENDOR_PORT:-27001}:${VENDOR_PORT:-27001}"
         environment:
             - VENDOR_NAME=${VENDOR_NAME:-default_vendor}
-        mac_address: ${FLEXLM_MAC:-00:14:4f:8d:24:cc}
-        hostname: ${FLEXLM_HOSTNAME:-flexlm-server}
+            - LMGRD_PORT=${LMGRD_PORT:-27000}
+            - VENDOR_PORT=${VENDOR_PORT:-27001}
+            - MAC_ADDRESS=${MAC_ADDRESS:-00:11:22:33:44:55}
+            - HOSTNAME=${HOSTNAME:-flexlm-server}
+            - MAX_LOG_SIZE_MB=${MAX_LOG_SIZE_MB:-100}
+        mac_address: ${MAC_ADDRESS:-00:11:22:33:44:55}
+        hostname: ${HOSTNAME:-flexlm-server}
         volumes:
             - ./licenses:/opt/flexlm/licenses
             - ./vendors:/opt/flexlm/vendors:ro
             - ./logs:/opt/flexlm/logs
-            - ./start-flexlm.sh:/opt/flexlm/bin/start-flexlm.sh:ro
         restart: unless-stopped
         cap_add:
         - NET_ADMIN
