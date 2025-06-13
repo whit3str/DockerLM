@@ -1,43 +1,29 @@
-FROM ubuntu:22.04
+# Use a common base Linux image
+FROM ubuntu:latest
 
-# Création d'un utilisateur non-root
-RUN groupadd -r flexlm && useradd -r -g flexlm -d /opt/flexlm -s /bin/bash flexlm
+# Set default license file path (can be overridden by LM_LICENSE_FILE in docker-compose)
+ENV LM_LICENSE_FILE=/opt/flexlm/licenses/license.dat
 
-# Installation des dépendances en une seule couche
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    nano=6.2-1 \
-    sudo=1.9.9-1ubuntu2 \
-    net-tools=1.60+git20181103.0eebece-1ubuntu5 \
-    dos2unix=7.4.2-2 \
-    lsb-core=11.1.0ubuntu4 \
-    build-essential=12.9ubuntu3 \
-    wget=1.21.2-2ubuntu1 \
-    gnupg2=2.2.27-3ubuntu2 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /usr/tmp
+# Create necessary directories
+RUN mkdir -p /opt/flexlm/bin /opt/flexlm/licenses /opt/flexlm/logs
 
-# Création des répertoires nécessaires avec les bonnes permissions
-RUN mkdir -p /opt/flexlm/{logs,bin,licenses,vendors} && \
-    chown -R flexlm:flexlm /opt/flexlm
+# Copy FlexLM binaries from the 'binaries' directory in the build context
+COPY binaries/lmgrd /opt/flexlm/bin/lmgrd
+COPY binaries/lmutil /opt/flexlm/bin/lmutil
 
-# Copie des binaires et scripts avec l'ordre optimisé pour le cache
-COPY binaries/lmgrd binaries/lmutil /opt/flexlm/bin/
-COPY start-flexlm.sh /opt/flexlm/bin/
+# Ensure they are executable
+RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
 
-# Correction des fins de ligne et permissions
-RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/start-flexlm.sh \
-             /opt/flexlm/bin/lmgrd \
-             /opt/flexlm/bin/lmutil && \
-    chown -R flexlm:flexlm /opt/flexlm/bin
+# Copy the entrypoint script
+COPY entrypoint.sh /opt/flexlm/entrypoint.sh
 
-# Définir le répertoire de travail
-WORKDIR /opt/flexlm
+# Ensure the entrypoint script is executable
+RUN chmod +x /opt/flexlm/entrypoint.sh
 
-# Passer à l'utilisateur non-root
-USER flexlm
+# Expose the default lmgrd port.
+# The vendor daemon port is dynamic or specified in the license file;
+# users will need to expose it separately if needed.
+EXPOSE 27000
 
-# Point d'entrée du conteneur - Utiliser le chemin absolu vers le script
-CMD ["/bin/bash", "/opt/flexlm/bin/start-flexlm.sh"]
+# Set the entrypoint
+ENTRYPOINT ["/opt/flexlm/entrypoint.sh"]
