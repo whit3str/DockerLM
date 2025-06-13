@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 services:
     dockerlm:
         image: dockerlm:env
@@ -15,3 +16,88 @@ services:
         restart: unless-stopped
         cap_add:
         - NET_ADMIN
+=======
+version: '3.9'
+
+services:
+    dockerlm:
+        image: 'ghcr.io/whit3str/dockerlm:latest'
+        container_name: dockerlm_${VENDOR_NAME:-default}
+
+        # Configuration réseau
+        ports:
+            - '${LMGRD_PORT:-27000}:${LMGRD_PORT:-27000}'
+            - '${VENDOR_PORT:-27001}:${VENDOR_PORT:-27001}'
+
+        networks:
+            flexlm_network:
+                mac_address: ${MAC_ADDRESS:-02:42:ac:11:00:02}
+
+        hostname: ${HOSTNAME:-flexlm-server}
+
+        # Variables d'environnement
+        environment:
+            - VENDOR_NAME=${VENDOR_NAME}
+            - MAX_LOG_SIZE_MB=${MAX_LOG_SIZE_MB:-10}
+            - LOG_ROTATION_HOURS=${LOG_ROTATION_HOURS:-1}
+            - RESTART_DELAY=${RESTART_DELAY:-5}
+
+        # Volumes
+        volumes:
+            # License file
+            - '${LICENSE_FILE_PATH}:/opt/flexlm/licenses/license.dat:ro'
+            # Vendor daemon
+            - '${VENDOR_DAEMON_PATH}:/opt/flexlm/vendors/${VENDOR_NAME}:ro'
+            # Logs persistence
+            - 'flexlm_logs:/opt/flexlm/logs'
+            # Optional: Custom configuration
+            - '${CONFIG_DIR:-./config}:/opt/flexlm/config:ro'
+
+        # Ressources
+        deploy:
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 512M
+                reservations:
+                    cpus: '0.25'
+                    memory: 128M
+
+        # Configuration container
+        tty: true
+        stdin_open: true
+        restart: unless-stopped
+
+        # Health check
+        healthcheck:
+            test: ["CMD", "/opt/flexlm/bin/lmutil", "lmstat", "-c", "/opt/flexlm/licenses/license.dat", "-a"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+        # Sécurité
+        security_opt:
+            - no-new-privileges:true
+        read_only: false  # FlexLM needs to write logs
+
+        # Logging
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "3"
+
+# Volumes nommés
+volumes:
+    flexlm_logs:
+        driver: local
+
+# Réseaux
+networks:
+    flexlm_network:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.20.0.0/16
+>>>>>>> 846a1942677cc755eb8472c27a817ed2290a49e9
