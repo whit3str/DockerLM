@@ -16,10 +16,10 @@ COPY binaries/lmutil /opt/flexlm/bin/lmutil
 RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
 
 # Copy the entrypoint script
-COPY simple-entrypoint.sh /opt/flexlm/simple-entrypoint.sh
+COPY entrypoint.sh /opt/flexlm/entrypoint.sh
 
 # Ensure the entrypoint script is executable
-RUN chmod +x /opt/flexlm/simple-entrypoint.sh
+RUN chmod +x /opt/flexlm/entrypoint.sh
 
 # Expose the default lmgrd port.
 # The vendor daemon port is dynamic or specified in the license file;
@@ -27,4 +27,4 @@ RUN chmod +x /opt/flexlm/simple-entrypoint.sh
 EXPOSE 27000
 
 # Set the entrypoint
-ENTRYPOINT ["/opt/flexlm/simple-entrypoint.sh"]
+ENTRYPOINT ["/opt/flexlm/entrypoint.sh"]
