@@ -16,6 +16,9 @@ CLEAN_MAC_ADDRESS=$(echo "${MAC_ADDRESS}" | sed 's/://g')
 LOG_FILE="/opt/flexlm/logs/${VENDOR_NAME}.log"
 ARCHIVE_DIR="/opt/flexlm/logs/archive"
 
+# Define VENDOR_DAEMON_PATH early for consistent use
+VENDOR_DAEMON_PATH="/opt/flexlm/vendors/${VENDOR_NAME}" # Path to the vendor daemon executable
+
 # ORIGINAL_LICENSE_DIR is no longer needed for ORIGINAL_LICENSE_FILE path definition
 ORIGINAL_LICENSE_FILE="/opt/flexlm/licenses/license.dat" # Static path for input license
 PROCESSED_LICENSE_DIR="/opt/flexlm/licenses" # Processed licenses go here
@@ -56,13 +59,14 @@ echo "  Updated SERVER line with HOSTNAME=${HOSTNAME}, MAC_ADDRESS=${CLEAN_MAC_A
 
 # Modify VENDOR line:
 # Example: VENDOR vendorname path/to/daemon PORT=oldport
-# Becomes: VENDOR vendorname /opt/flexlm/vendors/VENDOR_NAME/vendordaemon PORT=newport
-# This assumes the vendor daemon is named $VENDOR_NAME (e.g., "ansyslmd") and is located in its vendor directory.
+# Becomes: VENDOR vendorname /opt/flexlm/vendors/VENDOR_NAME PORT=newport
+# This assumes the vendor daemon is named $VENDOR_NAME (e.g., "ansyslmd") and is located directly in /opt/flexlm/vendors/
 # This also assumes the VENDOR line might or might not have options or a PORT= part.
-VENDOR_DAEMON_PATH="/opt/flexlm/vendors/${VENDOR_NAME}/" # Assuming daemon name matches VENDOR_NAME
+# VENDOR_DAEMON_PATH is already defined above with the new path /opt/flexlm/vendors/${VENDOR_NAME}
 
-# First, ensure the VENDOR line has the correct daemon name and path
-sed -i -E "s|^(VENDOR\s+${VENDOR_NAME}\s+)\S+|\1${VENDOR_DAEMON_PATH}|" "$PROCESSED_LICENSE_FILE"
+# Update the VENDOR line to use the new VENDOR_DAEMON_PATH.
+# Using ~ as sed delimiter.
+sed -i -E "s~^(VENDOR\s+${VENDOR_NAME}\s+)\S+~\1${VENDOR_DAEMON_PATH}~" "$PROCESSED_LICENSE_FILE"
 
 # Now, add or update the PORT= for the VENDOR line.
 # If PORT= exists, update it.
@@ -123,10 +127,9 @@ touch "$LOG_FILE" # Create log file so tail doesn't fail immediately
 manage_log_rotation &
 echo "Log rotation process started in background."
 
-# VENDOR_DAEMON_PATH was already defined and used during license processing.
-# For clarity, its value is /opt/flexlm/vendors/${VENDOR_NAME}/
-echo "Ensuring vendor daemon is executable..."
-if [ -f "$VENDOR_DAEMON_PATH" ]; then
+# VENDOR_DAEMON_PATH is already defined with the new path /opt/flexlm/vendors/${VENDOR_NAME}
+echo "Ensuring vendor daemon (${VENDOR_DAEMON_PATH}) is executable..."
+if [ -f "$VENDOR_DAEMON_PATH" ]; then # Corrected variable name from VENDOR_DAEMONS_PATH
     chmod +x "$VENDOR_DAEMON_PATH"
     echo "Vendor daemon $VENDOR_DAEMON_PATH made executable."
 else
