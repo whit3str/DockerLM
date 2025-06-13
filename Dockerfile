@@ -1,79 +1,31 @@
-<<<<<<< HEAD
-FROM ubuntu:24.04
-
-# Création des répertoires nécessaires
-RUN mkdir -p /opt/flexlm/logs \
-    /opt/flexlm/bin \
-    /opt/flexlm/licenses \
-    /opt/flexlm/vendors
-
-WORKDIR /opt/flexlm
-
-# Installation des dépendances
-RUN apt-get update && \
-    apt-get install -y \
-    nano \
-    sudo \
-    net-tools \
-    dos2unix \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /usr/tmp
-
-# Copie des fichiers
-COPY start-flexlm.sh /opt/flexlm/bin/
-COPY binaries/lmgrd /opt/flexlm/bin/
-COPY binaries/lmutil /opt/flexlm/bin/
-
-# Correction des fins de ligne et permissions
-RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/start-flexlm.sh \
-    /opt/flexlm/bin/lmgrd \
-    /opt/flexlm/bin/lmutil
-
-# Point d'entrée du conteneur
-=======
+# Use a common base Linux image
 FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y --no-install-recommends lsb-core ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Variables d'environnement
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+# Set default license file path (can be overridden by LM_LICENSE_FILE in docker-compose)
+ENV LM_LICENSE_FILE=/opt/flexlm/licenses/license.dat
 
-# Installation des dépendances essentielles en une seule couche
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    dos2unix \
-    procps \
-    net-tools \
-    iproute2 \
-    iputils-ping \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Create necessary directories
+RUN mkdir -p /opt/flexlm/bin /opt/flexlm/licenses /opt/flexlm/logs
+RUN mkdir -p /usr/tmp/.flexlm && chmod 777 /usr/tmp/.flexlm
 
-# Création de l'utilisateur et des répertoires
-RUN groupadd -r flexlm && \
-    useradd -r -g flexlm -d /opt/flexlm flexlm && \
-    mkdir -p /opt/flexlm/{bin,logs,licenses,vendors,tmp,config} && \
-    chown -R flexlm:flexlm /opt/flexlm
+# Copy FlexLM binaries from the 'binaries' directory in the build context
+COPY binaries/lmgrd /opt/flexlm/bin/lmgrd
+COPY binaries/lmutil /opt/flexlm/bin/lmutil
 
-# Copie des binaires FlexLM
-COPY binaries/lmgrd binaries/lmutil /opt/flexlm/bin/
-RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil && \
-    chown flexlm:flexlm /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
+# Ensure they are executable
+RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
 
-# Copie et configuration du script
-COPY start-flexlm.sh /opt/flexlm/bin/
-RUN dos2unix /opt/flexlm/bin/start-flexlm.sh && \
-    chmod +x /opt/flexlm/bin/start-flexlm.sh && \
-    chown flexlm:flexlm /opt/flexlm/bin/start-flexlm.sh
+# Copy the entrypoint script
+COPY entrypoint.sh /opt/flexlm/entrypoint.sh
 
-# Configuration par défaut
-ENV VENDOR_NAME="" \
-    TMPDIR=/opt/flexlm/tmp
+# Ensure the entrypoint script is executable
+RUN chmod +x /opt/flexlm/entrypoint.sh
 
-WORKDIR /opt/flexlm
-USER flexlm
-EXPOSE 27000-27001
+# Expose the default lmgrd port.
+# The vendor daemon port is dynamic or specified in the license file;
+# users will need to expose it separately if needed.
+EXPOSE 27000
 
->>>>>>> 846a1942677cc755eb8472c27a817ed2290a49e9
-CMD ["/bin/bash", "/opt/flexlm/bin/start-flexlm.sh"]
+# Set the entrypoint
+ENTRYPOINT ["/opt/flexlm/entrypoint.sh"]
