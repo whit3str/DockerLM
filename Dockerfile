@@ -6,6 +6,7 @@ ENV LM_LICENSE_FILE=/opt/flexlm/licenses/license.dat
 
 # Create necessary directories
 RUN mkdir -p /opt/flexlm/bin /opt/flexlm/licenses /opt/flexlm/logs
+RUN mkdir -p /usr/tmp/.flexlm && chmod 777 /usr/tmp/.flexlm
 
 # Copy FlexLM binaries from the 'binaries' directory in the build context
 COPY binaries/lmgrd /opt/flexlm/bin/lmgrd
@@ -15,10 +16,10 @@ COPY binaries/lmutil /opt/flexlm/bin/lmutil
 RUN chmod +x /opt/flexlm/bin/lmgrd /opt/flexlm/bin/lmutil
 
 # Copy the entrypoint script
-COPY entrypoint.sh /opt/flexlm/entrypoint.sh
+COPY simple-entrypoint.sh /opt/flexlm/simple-entrypoint.sh
 
 # Ensure the entrypoint script is executable
-RUN chmod +x /opt/flexlm/entrypoint.sh
+RUN chmod +x /opt/flexlm/simple-entrypoint.sh
 
 # Expose the default lmgrd port.
 # The vendor daemon port is dynamic or specified in the license file;
@@ -26,4 +27,4 @@ RUN chmod +x /opt/flexlm/entrypoint.sh
 EXPOSE 27000
 
 # Set the entrypoint
-ENTRYPOINT ["/opt/flexlm/entrypoint.sh"]
+ENTRYPOINT ["/opt/flexlm/simple-entrypoint.sh"]
