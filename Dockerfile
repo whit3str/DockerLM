@@ -1,5 +1,6 @@
 # Use a common base Linux image
 FROM ubuntu:latest
+RUN apt-get update && apt-get install -y --no-install-recommends lsb-core ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Set default license file path (can be overridden by LM_LICENSE_FILE in docker-compose)
 ENV LM_LICENSE_FILE=/opt/flexlm/licenses/license.dat
